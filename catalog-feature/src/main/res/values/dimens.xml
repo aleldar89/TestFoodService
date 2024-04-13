@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="elevation">2dp</dimen>
+    <dimen name="spacing_extra_small">2dp</dimen>
+    <dimen name="small_corner_radius">4dp</dimen>
+</resources>
