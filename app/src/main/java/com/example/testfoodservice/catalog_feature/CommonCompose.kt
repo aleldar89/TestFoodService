@@ -1,4 +1,4 @@
-package com.example.catalog_feature
+package com.example.testfoodservice.catalog_feature
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.testfoodservice.R
 
 @Composable
 fun CounterRow(value: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {

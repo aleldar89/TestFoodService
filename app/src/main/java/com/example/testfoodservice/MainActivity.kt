@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.catalog_feature.CatalogScreen
+import com.example.testfoodservice.catalog_feature.CatalogScreen
 import com.example.testfoodservice.ui.theme.TestFoodServiceTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +31,8 @@ class MainActivity : ComponentActivity() {
                     SplashScreen()
                     Handler(Looper.getMainLooper()).postDelayed({
                         setContent {
-                            CatalogScreen()
+//                            CatalogScreen()
+                            AppScreen()
                         }
                     }, splashScreenDuration)
                 }

@@ -5,7 +5,6 @@ import com.example.models_api.product.Product
 import com.example.models_api.tag.Tag
 import retrofit2.http.GET
 
-
 interface ApiService {
 
     @GET("Categories.json")

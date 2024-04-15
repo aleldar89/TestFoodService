@@ -1,4 +1,4 @@
-package com.example.catalog_feature
+package com.example.testfoodservice.catalog_feature
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
