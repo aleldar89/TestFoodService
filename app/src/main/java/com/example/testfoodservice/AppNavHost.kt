@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.testfoodservice.cart_feature.CartScreen
 import com.example.testfoodservice.catalog_feature.CatalogScreen
+import com.example.testfoodservice.product_feature.ProductScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -16,17 +17,26 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Catalog.route
+        startDestination = AppDestination.CATALOG_ROUTE
     ) {
-        composable(route = Catalog.route) {
+        composable(route = AppDestination.CATALOG_ROUTE) {
             CatalogScreen(
                 onNavigateToCart = {
-                    navController.navigateSingleTopTo(Cart.route)
+                    navController.navigate(route = AppDestination.CART_ROUTE)
+                },
+
+                onNavigateToProduct = { productId ->
+                    navController.navigate(route = "${AppDestination.PRODUCT_ROUTE}/$productId")
                 }
             )
         }
-        composable(route = Cart.route) {
+
+        composable(route = AppDestination.CART_ROUTE) {
             CartScreen()
+        }
+
+        composable(route = "${AppDestination.PRODUCT_ROUTE}/{productId}") {
+            ProductScreen()
         }
     }
 }

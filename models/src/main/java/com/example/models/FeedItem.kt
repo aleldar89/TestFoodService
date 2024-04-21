@@ -1,4 +1,4 @@
-package com.example.models_api
+package com.example.models
 
 interface FeedItem {
     val id: Int

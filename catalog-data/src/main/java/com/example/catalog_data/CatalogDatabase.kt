@@ -3,13 +3,19 @@ package com.example.catalog_data
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.models_api.Converters
-import com.example.models_api.category.CategoryEntity
-import com.example.models_api.product.ProductEntity
-import com.example.models_api.tag.TagEntity
+import com.example.models.Converters
+import com.example.models.category.CategoryEntity
+import com.example.models.crossref.ProductTagCrossRef
+import com.example.models.product.ProductEntity
+import com.example.models.tag.TagEntity
 
 @Database(
-    entities = [CategoryEntity::class, TagEntity::class, ProductEntity::class],
+    entities = [
+        CategoryEntity::class,
+        TagEntity::class,
+        ProductEntity::class,
+        ProductTagCrossRef::class
+    ],
     version = 1,
     exportSchema = false
 )

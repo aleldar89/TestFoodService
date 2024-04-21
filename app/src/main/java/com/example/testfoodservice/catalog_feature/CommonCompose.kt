@@ -22,7 +22,11 @@ import androidx.compose.ui.unit.dp
 import com.example.testfoodservice.R
 
 @Composable
-fun CounterRow(value: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {
+fun CounterRow(
+    amount: Int,
+    onIncrement: () -> Unit = {},
+    onDecrement: () -> Unit = {}
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(8.dp)
@@ -35,7 +39,7 @@ fun CounterRow(value: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {
             Text("-")
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "$value", modifier = Modifier.widthIn(min = 24.dp))
+        Text(text = "$amount", modifier = Modifier.widthIn(min = 24.dp))
         Spacer(modifier = Modifier.width(8.dp))
         Button(
             onClick = { onIncrement() },
@@ -72,7 +76,7 @@ fun LoadIcon(
 
 @Composable
 fun LoadImage(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     contentDescription: String = "",
     alignment: Alignment = Alignment.Center,
     contentScale: ContentScale = ContentScale.FillWidth,
@@ -80,7 +84,7 @@ fun LoadImage(
 ) {
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         contentAlignment = alignment
     ) {
         Image(

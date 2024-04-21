@@ -1,6 +1,6 @@
-package com.example.models_api.tag
+package com.example.models.tag
 
-import com.example.models_api.FeedItem
+import com.example.models.FeedItem
 
 data class Tag(
     override val id: Int,

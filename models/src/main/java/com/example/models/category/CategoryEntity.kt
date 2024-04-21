@@ -1,9 +1,9 @@
-package com.example.models_api.category
+package com.example.models.category
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.models_api.BaseEntity
-import com.example.models_api.DataMapper
+import com.example.models.BaseEntity
+import com.example.models.DataMapper
 
 @Entity
 data class CategoryEntity(

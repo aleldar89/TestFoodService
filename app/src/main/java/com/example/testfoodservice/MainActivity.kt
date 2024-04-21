@@ -19,23 +19,19 @@ class MainActivity : ComponentActivity() {
 
     private val splashScreenDuration = 2000L
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TestFoodServiceTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    SplashScreen()
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        setContent {
-//                            CatalogScreen()
-                            AppScreen()
-                        }
-                    }, splashScreenDuration)
-                }
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                SplashScreen()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    setContent {
+                        AppScreen()
+                    }
+                }, splashScreenDuration)
             }
         }
     }

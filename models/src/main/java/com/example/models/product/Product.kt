@@ -1,24 +1,19 @@
-package com.example.models_api.product
+package com.example.models.product
 
-import com.example.models_api.FeedItem
+import com.example.models.FeedItem
 import com.google.gson.annotations.SerializedName
 
 data class Product(
-    @SerializedName("id")
     override val id: Int,
     @SerializedName("category_id")
     val categoryId: Int,
-    @SerializedName("name")
     val name: String,
-    @SerializedName("description")
     val description: String,
-    @SerializedName("image")
     val image: String,
     @SerializedName("price_current")
     val priceCurrent: Int,
     @SerializedName("price_old")
     val priceOld: Int?,
-    @SerializedName("measure")
     val measure: Int,
     @SerializedName("measure_unit")
     val measureUnit: String,
@@ -31,5 +26,7 @@ data class Product(
     @SerializedName("carbohydrates_per_100_grams")
     val carbohydratesPer100Grams: Double,
     @SerializedName("tag_ids")
-    val tagIds: List<Int>
+    val tagIds: List<Int>,
+    val amount: Int = 0,
+    val totalPrice: Int = 0
 ): FeedItem

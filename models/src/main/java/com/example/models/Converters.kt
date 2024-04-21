@@ -1,4 +1,4 @@
-package com.example.models_api
+package com.example.models
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson

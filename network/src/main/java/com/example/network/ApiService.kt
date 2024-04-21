@@ -1,8 +1,8 @@
 package com.example.network
 
-import com.example.models_api.category.Category
-import com.example.models_api.product.Product
-import com.example.models_api.tag.Tag
+import com.example.models.category.Category
+import com.example.models.product.Product
+import com.example.models.tag.Tag
 import retrofit2.http.GET
 
 interface ApiService {
