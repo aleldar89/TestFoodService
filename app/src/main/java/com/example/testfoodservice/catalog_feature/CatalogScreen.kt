@@ -1,5 +1,6 @@
 package com.example.testfoodservice.catalog_feature
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,23 +54,50 @@ fun CatalogScreen(
     onNavigateToProduct: (id: Int) -> Unit = {}
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
-    val catalogTags by viewModel.tags.collectAsStateWithLifecycle()
-    val products by viewModel.products.collectAsStateWithLifecycle()
+    val selectedCategoryIds by viewModel.selectedCategoryIds.collectAsStateWithLifecycle().also{
+        Log.d("selectedCategoryIds", it.value.toString())
+    }
+    val tags by viewModel.tags.collectAsStateWithLifecycle()
+    val selectedTagIds by viewModel.selectedTagIds.collectAsStateWithLifecycle().also{
+        Log.d("selectedTagIds", it.value.toString())
+    }
+    val products by viewModel.products.collectAsStateWithLifecycle().also {
+        Log.d("combined", it.value.size.toString())
+    }
 
     val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    DisposableEffect(Unit) {
+        onDispose {
+            //TODO if need
+        }
+    }
 
     Scaffold(
         topBar = {
             CustomAppBar(
-                onClickMenu = { showBottomSheet = true },
+                onClickMenu = { scope.launch { sheetState.show() } },
                 onClickCart = onNavigateToCart
             )
+        },
+        bottomBar = {
+            if (sheetState.isVisible) {
+                BottomSheetContent(
+                    tags = tags,
+                    selectedTagIds = selectedTagIds,
+                    onTagSelected = viewModel::updateSelectedTags,
+                    onDismiss = {
+                        scope.launch { sheetState.hide() }
+                    }
+                )
+            }
         }
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
             CategoryRow(
                 categories = categories,
+                selectedCategoryIds = selectedCategoryIds,
                 onClicked = viewModel::updateSelectedCategories
             )
             CatalogGrid(
@@ -76,48 +106,6 @@ fun CatalogScreen(
                 addProductToCart = viewModel::addProductToCart,
                 removeProductFromCart = viewModel::removeProductFromCart
             )
-        }
-
-        if (showBottomSheet) {
-            val scope = rememberCoroutineScope()
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                sheetState = sheetState
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Подобрать блюда",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    catalogTags.forEach { tag ->
-                        TagRow(tag = tag) {
-                            viewModel.updateSelectedTags(tag.id)
-                        }
-                    }
-
-                    Button(
-                        onClick = {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    showBottomSheet = false
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    ) {
-                        Text(text = "Готово")
-                    }
-                }
-            }
         }
     }
 }
@@ -160,7 +148,8 @@ fun CatalogItem(
 
         Box(modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(product.id) }) {
+            .clickable { onClick(product.id) }
+        ) {
             LoadImage(modifier = Modifier.fillMaxSize())
             if (product.priceOld != null)
                 LoadIcon()
@@ -210,6 +199,7 @@ fun CatalogItem(
 @Composable
 fun CategoryRow(
     categories: List<Category>,
+    selectedCategoryIds: List<Int>,
     onClicked: (categoryId: Int) -> Unit
 ) {
     LazyRow(
@@ -219,6 +209,7 @@ fun CategoryRow(
         items(categories.size) { index ->
             CategoryButton(
                 category = categories[index],
+                buttonState = selectedCategoryIds.contains(categories[index].id),
                 onClicked = onClicked
             )
         }
@@ -228,19 +219,18 @@ fun CategoryRow(
 @Composable
 fun CategoryButton(
     category: Category,
+    buttonState: Boolean,
     onClicked: (categoryId: Int) -> Unit
 ) {
-    val buttonState = rememberSaveable { mutableStateOf(false) }
 
     Button(
         onClick = {
-            buttonState.value = !buttonState.value
             onClicked(category.id)
         },
         modifier = Modifier.padding(8.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (buttonState.value) Color(0xFFFFA500) else Color.White, // Orange color when pressed
+            containerColor = if (buttonState) Color(0xFFFFA500) else Color.White,
             disabledContentColor = Color.Gray
         ),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -252,8 +242,53 @@ fun CategoryButton(
                 Text(
                     text = category.name,
                     fontSize = 16.sp,
-                    color = if (buttonState.value) Color.White else Color.Black
+                    color = if (buttonState) Color.White else Color.Black
                 )
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheetContent(
+    tags: List<Tag>,
+    selectedTagIds: List<Int>,
+    onTagSelected: (tagId: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(),
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Подобрать блюда",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                tags.forEach { tag ->
+                    TagRow(
+                        tag = tag,
+                        checked = selectedTagIds.contains(tag.id),
+                        onCheckedChange = { tagId ->
+                            onTagSelected(tagId)
+                        }
+                    )
+                }
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(text = "Готово")
+                }
             }
         }
     )
@@ -262,9 +297,9 @@ fun CategoryButton(
 @Composable
 fun TagRow(
     tag: Tag,
-    onClicked: (tagId: Int) -> Unit
+    checked: Boolean,
+    onCheckedChange: (tagId: Int) -> Unit
 ) {
-    var checked by rememberSaveable { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -281,8 +316,7 @@ fun TagRow(
         Checkbox(
             checked = checked,
             onCheckedChange = {
-                checked = it
-                onClicked(tag.id)
+                onCheckedChange(tag.id)
             },
             colors = CheckboxDefaults.colors(
                 checkedColor = MaterialTheme.colorScheme.secondary,

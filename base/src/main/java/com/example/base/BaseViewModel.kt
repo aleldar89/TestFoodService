@@ -11,10 +11,12 @@ import kotlinx.coroutines.flow.stateIn
 
 abstract class BaseViewModel : ViewModel() {
 
+    protected val timeout = 1000L
+
     protected fun <D : FeedItem> getLocalData(
         localDataFlow: Flow<List<D>>,
         scope: CoroutineScope = viewModelScope,
-        stopTimeoutMillis: Long = 3000L,
+        stopTimeoutMillis: Long = timeout,
         initialValue: List<D> = emptyList()
     ): StateFlow<List<D>> = localDataFlow.stateIn(
         scope,

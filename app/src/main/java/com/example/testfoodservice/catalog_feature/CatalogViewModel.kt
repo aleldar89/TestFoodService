@@ -1,9 +1,11 @@
 package com.example.testfoodservice.catalog_feature
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.example.base.BaseViewModel
 import com.example.catalog_data.use_cases.DecreaseProductAmountUseCase
 import com.example.catalog_data.use_cases.FilterProductsByCategoriesUseCase
+import com.example.catalog_data.use_cases.FilterProductsByTagAndCategoryUseCase
 import com.example.catalog_data.use_cases.FilterProductsByTagsUseCase
 import com.example.catalog_data.use_cases.GetLocalCategoriesUseCase
 import com.example.catalog_data.use_cases.GetLocalProductsUseCase
@@ -19,7 +21,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,10 +33,11 @@ import javax.inject.Inject
 class CatalogViewModel @Inject constructor(
     localCategoriesUseCase: GetLocalCategoriesUseCase,
     localTagsUseCase: GetLocalTagsUseCase,
-    localProductsUseCase: GetLocalProductsUseCase,
+    private val localProductsUseCase: GetLocalProductsUseCase,
     private val getRemoteDataUseCase: GetRemoteDataUseCase,
     private val filterProductsByTagsUseCase: FilterProductsByTagsUseCase,
     private val filterProductsByCategoriesUseCase: FilterProductsByCategoriesUseCase,
+    private val filterProductsByTagAndCategoryUseCase: FilterProductsByTagAndCategoryUseCase,
     private val increaseProductAmountUseCase: IncreaseProductAmountUseCase,
     private val decreaseProductAmountUseCase: DecreaseProductAmountUseCase
 ) : BaseViewModel() {
@@ -40,52 +45,69 @@ class CatalogViewModel @Inject constructor(
     val categories: StateFlow<List<Category>> = getLocalData(localCategoriesUseCase.localCategories)
     val tags: StateFlow<List<Tag>> = getLocalData(localTagsUseCase.localTags)
 
-    private val _selectedTags = MutableStateFlow(listOf<Int>())
-    private val selectedTags: StateFlow<List<Int>>
-        get() = _selectedTags
+    private val _selectedTagIds = MutableStateFlow(listOf<Int>())
+    val selectedTagIds: StateFlow<List<Int>> = _selectedTagIds
 
-    private val _selectedCategories = MutableStateFlow(listOf<Int>())
-    private val selectedCategories: StateFlow<List<Int>>
-        get() = _selectedCategories
+    private val _selectedCategoryIds = MutableStateFlow(listOf<Int>())
+    val selectedCategoryIds: StateFlow<List<Int>> = _selectedCategoryIds
 
-    val products: StateFlow<List<Product>> = selectedCategories.flatMapLatest { list ->
-        if (list.isEmpty())
-            localProductsUseCase.localProducts
-        else
-            filterProductsByCategoriesUseCase.filterProductsByCategories(list)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000L), emptyList())
+    private val combinedSelectedTagsAndCategories: StateFlow<Pair<List<Int>, List<Int>>> =
+        combine(selectedTagIds, selectedCategoryIds) { tags, categories ->
+            tags to categories
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(timeout),
+            Pair(emptyList(), emptyList())
+        )
+
+    val products: StateFlow<List<Product>> = getLocalData(
+        combinedSelectedTagsAndCategories.flatMapLatest { (tagIds, categoryIds) ->
+            when {
+                tagIds.isEmpty() && categoryIds.isEmpty() -> localProductsUseCase.localProducts
+
+                tagIds.isEmpty() -> {
+                    filterProductsByCategoriesUseCase.filterProductsByCategories(categoryIds)
+                }
+
+                categoryIds.isEmpty() -> {
+                    filterProductsByTagsUseCase.filterProductsByTags(tagIds)
+                }
+
+                else -> {
+                    filterProductsByTagAndCategoryUseCase.filterProductsByTagAndCategory(
+                        tagIds,
+                        categoryIds
+                    )
+                }
+            }
+        }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(timeout), 1)
+    )
 
     init {
         getData()
     }
 
     private fun getData() {
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
                 getRemoteDataUseCase.getRemoteData()
+            } catch (e: Exception) {
+                //TODO
             }
-        } catch (e: Exception) {
-            //TODO error toast from SingleLiveEvent
         }
     }
 
     fun updateSelectedTags(tagId: Int) =
-        if (_selectedTags.value.contains(tagId))
-            _selectedTags.value -= tagId
+        if (_selectedTagIds.value.contains(tagId))
+            _selectedTagIds.value -= tagId
         else
-            _selectedTags.value += tagId
+            _selectedTagIds.value += tagId
 
     fun updateSelectedCategories(categoryId: Int) =
-        if (_selectedCategories.value.contains(categoryId))
-            _selectedCategories.value -= categoryId
+        if (_selectedCategoryIds.value.contains(categoryId))
+            _selectedCategoryIds.value -= categoryId
         else
-            _selectedCategories.value += categoryId
-
-    private fun filterProductsByTags(tagIds: List<Int>): StateFlow<List<Product>> =
-        getLocalData(filterProductsByTagsUseCase.filterProductsByTags(tagIds))
-
-    private fun filterProductsByCategories(categoryIds: List<Int>): StateFlow<List<Product>> =
-        getLocalData(filterProductsByCategoriesUseCase.filterProductsByCategories(categoryIds))
+            _selectedCategoryIds.value += categoryId
 
     fun addProductToCart(id: Int) = viewModelScope.launch(Dispatchers.IO) {
         increaseProductAmountUseCase.increaseProductAmount(id)

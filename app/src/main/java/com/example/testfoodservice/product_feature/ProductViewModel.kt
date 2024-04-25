@@ -42,11 +42,10 @@ class ProductViewModel @Inject constructor(
         getProductById()
     }
 
-    val productId: String? = savedStateHandle["productId"]
+    private val productId: String? = savedStateHandle["productId"]
 
     private val _clickedProduct = MutableStateFlow(emptyProduct)
-    val clickedProduct: StateFlow<Product>
-        get() = _clickedProduct
+    val clickedProduct: StateFlow<Product> = _clickedProduct
 
     private fun getProductById() = viewModelScope.launch(Dispatchers.IO) {
         if (productId != null)

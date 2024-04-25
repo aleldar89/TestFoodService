@@ -2,6 +2,7 @@ package com.example.catalog_data
 
 import com.example.models.category.Category
 import com.example.models.product.Product
+import com.example.models.product.ProductEntity
 import com.example.models.tag.Tag
 import kotlinx.coroutines.flow.Flow
 
@@ -18,6 +19,11 @@ interface CatalogRepository {
     suspend fun getProductById(id: Int): Product
     fun filterProductsByTags(tagIds: List<Int>): Flow<List<Product>>
     fun filterProductsByCategories(categoryIds: List<Int>): Flow<List<Product>>
+    fun filterProductsByTagAndCategory(
+        tagIds: List<Int>,
+        categoryIds: List<Int>
+    ): Flow<List<Product>>
+
     suspend fun increaseProductAmount(id: Int)
     suspend fun decreaseProductAmount(id: Int)
 }

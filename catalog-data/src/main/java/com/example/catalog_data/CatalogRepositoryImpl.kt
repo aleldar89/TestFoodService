@@ -9,7 +9,11 @@ import com.example.models.tag.Tag
 import com.example.models.tag.toEntity
 import com.example.network.ApiService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -31,41 +35,50 @@ class CatalogRepositoryImpl @Inject constructor(
 
     override suspend fun getRemoteData() {
         withContext(Dispatchers.IO) {
-            getRemoteCategories()
-            getRemoteTags()
-            getRemoteProducts()
-        }
-    }
-
-    override suspend fun getRemoteCategories() {
-        apiService.getCategories().forEach {
-            dao.insertCategory(it.toEntity())
-        }
-    }
-
-    override suspend fun getRemoteTags() {
-        apiService.getTags().forEach {
-            dao.insertTag(it.toEntity())
-        }
-    }
-
-    override suspend fun getRemoteProducts() {
-        apiService.getProducts().forEach {
-            dao.insertProduct(it.toEntity())
-        }
-    }
-
-    override suspend fun getProductById(id: Int): Product = withContext(Dispatchers.IO) {
-        dao.getProductById(id).entityToDto()
-    }
-
-    override fun filterProductsByTags(tagIds: List<Int>): Flow<List<Product>> =
-        dao.filterProductsByTag(tagIds)
-            .map { list ->
-                list.map { entity ->
-                    entity.entityToDto()
-                }
+            val remoteDataDeferred = async {
+                val categories = apiService.getCategories()
+                val tags = apiService.getTags()
+                val products = apiService.getProducts()
+                Triple(categories, tags, products)
             }
+            val (categories, tags, products) = remoteDataDeferred.await()
+            dao.insertAllCategories(categories.map { it.toEntity() })
+            dao.insertAllTags(tags.map { it.toEntity() })
+            dao.insertAllProducts(products.map { it.toEntity() })
+        }
+    }
+
+    override suspend fun getRemoteCategories() = dao.insertAllCategories(
+        apiService.getCategories().map {
+            it.toEntity()
+        }
+    )
+
+    override suspend fun getRemoteTags() = dao.insertAllTags(
+        apiService.getTags().map {
+            it.toEntity()
+        }
+    )
+
+    override suspend fun getRemoteProducts() = dao.insertAllProducts(
+        apiService.getProducts().map {
+            it.toEntity()
+        }
+    )
+
+    override suspend fun getProductById(id: Int): Product = dao.getProductById(id).entityToDto()
+
+    //FIXME
+    override fun filterProductsByTags(tagIds: List<Int>): Flow<List<Product>> =
+        dao.getProducts().map { list ->
+            list.filter { entity ->
+                tagIds.all { tagId ->
+                    entity.tagIds.contains(tagId)
+                }
+            }.map { product ->
+                product.entityToDto()
+            }
+        }
 
     override fun filterProductsByCategories(categoryIds: List<Int>): Flow<List<Product>> =
         dao.filterProductsByCategories(categoryIds)
@@ -75,11 +88,19 @@ class CatalogRepositoryImpl @Inject constructor(
                 }
             }
 
-    override suspend fun increaseProductAmount(id: Int) = withContext(Dispatchers.IO) {
-        dao.increaseProductAmount(id)
-    }
+    //FIXME
+    override fun filterProductsByTagAndCategory(
+        tagIds: List<Int>,
+        categoryIds: List<Int>
+    ): Flow<List<Product>> =
+        combine(
+            filterProductsByTags(tagIds),
+            filterProductsByCategories(categoryIds)
+        ) { productsByTags, productsByCategories ->
+            productsByTags.intersect(productsByCategories.toSet()).toList()
+        }
 
-    override suspend fun decreaseProductAmount(id: Int) = withContext(Dispatchers.IO) {
-        dao.decreaseProductAmount(id)
-    }
+    override suspend fun increaseProductAmount(id: Int) = dao.increaseProductAmount(id)
+
+    override suspend fun decreaseProductAmount(id: Int) = dao.decreaseProductAmount(id)
 }

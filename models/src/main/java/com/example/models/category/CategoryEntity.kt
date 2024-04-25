@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import com.example.models.BaseEntity
 import com.example.models.DataMapper
 
-@Entity
+@Entity(tableName = "category")
 data class CategoryEntity(
     @PrimaryKey(autoGenerate = true)
     override val id: Int,
