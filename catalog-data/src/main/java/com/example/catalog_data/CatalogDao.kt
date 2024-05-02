@@ -29,17 +29,8 @@ interface CatalogDao {
     @Query("SELECT * FROM product WHERE id = :id")
     suspend fun getProductById(id: Int): ProductEntity
 
-    //FIXME
-    @Query("""
-    SELECT * FROM product
-    WHERE id IN (
-        SELECT productId FROM product_tag
-        WHERE tagId IN (:tagIds)
-        GROUP BY productId
-        HAVING COUNT(DISTINCT tagId) = :tagCount
-    )
-""")
-    fun filterProductsByTags(tagIds: List<Int>, tagCount: Int): Flow<List<ProductEntity>>
+    @Query("SELECT * FROM product WHERE id IN (SELECT id FROM product WHERE tagIds = :tagIds)")
+    fun filterProductsByTags(tagIds: List<Int>): Flow<List<ProductEntity>>
 
     @Query("SELECT * FROM product WHERE categoryId IN (:categoryIds)")
     fun filterProductsByCategories(categoryIds: List<Int>): Flow<List<ProductEntity>>

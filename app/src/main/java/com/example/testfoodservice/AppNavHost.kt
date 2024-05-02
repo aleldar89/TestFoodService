@@ -32,11 +32,11 @@ fun AppNavHost(
         }
 
         composable(route = AppDestination.CART_ROUTE) {
-            CartScreen()
+            CartScreen(navController = navController)
         }
 
         composable(route = "${AppDestination.PRODUCT_ROUTE}/{productId}") {
-            ProductScreen()
+            ProductScreen(navController = navController)
         }
     }
 }

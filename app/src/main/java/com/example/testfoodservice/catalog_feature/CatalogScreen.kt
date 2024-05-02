@@ -1,12 +1,12 @@
 package com.example.testfoodservice.catalog_feature
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,17 +25,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Gray
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.fontResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,6 +42,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.models.category.Category
 import com.example.models.product.Product
 import com.example.models.tag.Tag
+import com.example.testfoodservice.AmountButtons
+import com.example.testfoodservice.LoadIcon
+import com.example.testfoodservice.LoadImage
+import com.example.testfoodservice.R
+import com.example.testfoodservice.WideButton
+import com.example.testfoodservice.decreaseBy100
+import com.example.testfoodservice.ui.theme.Black
+import com.example.testfoodservice.ui.theme.Orange
+import com.example.testfoodservice.ui.theme.White
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
@@ -54,25 +62,13 @@ fun CatalogScreen(
     onNavigateToProduct: (id: Int) -> Unit = {}
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
-    val selectedCategoryIds by viewModel.selectedCategoryIds.collectAsStateWithLifecycle().also{
-        Log.d("selectedCategoryIds", it.value.toString())
-    }
+    val selectedCategoryIds by viewModel.selectedCategoryIds.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
-    val selectedTagIds by viewModel.selectedTagIds.collectAsStateWithLifecycle().also{
-        Log.d("selectedTagIds", it.value.toString())
-    }
-    val products by viewModel.products.collectAsStateWithLifecycle().also {
-        Log.d("combined", it.value.size.toString())
-    }
+    val selectedTagIds by viewModel.selectedTagIds.collectAsStateWithLifecycle()
+    val products by viewModel.products.collectAsStateWithLifecycle()
 
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-
-    DisposableEffect(Unit) {
-        onDispose {
-            //TODO if need
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -163,7 +159,7 @@ fun CatalogItem(
         }
 
         if (product.amount > 0) {
-            CounterRow(
+            AmountButtons(
                 amount = product.amount,
                 onIncrement = onAddProduct,
                 onDecrement = onRemoveProduct
@@ -173,21 +169,26 @@ fun CatalogItem(
                 onClick = onAddProduct,
                 modifier = Modifier
                     .padding(top = 8.dp)
+                    .aspectRatio(3f / 1f)
                     .fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black
+                    containerColor = White,
+                    contentColor = Black
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 10.dp
                 )
             ) {
-                Text(text = "${product.priceCurrent.decreaseBy100()}")
+                Text(
+                    text = "${product.priceCurrent.decreaseBy100()} ₽",
+                    fontSize = 16.sp,
+                )
                 if (product.priceOld != null) {
                     Text(
-                        text = "${product.priceOld.let { it?.decreaseBy100() }}",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "${product.priceOld!!.decreaseBy100()} ₽",
+                        fontSize = 16.sp,
+                        textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -228,10 +229,10 @@ fun CategoryButton(
             onClicked(category.id)
         },
         modifier = Modifier.padding(8.dp),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (buttonState) Color(0xFFFFA500) else Color.White,
-            disabledContentColor = Color.Gray
+            containerColor = if (buttonState) Orange else White,
+            disabledContentColor = Gray
         ),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         content = {
@@ -242,7 +243,7 @@ fun CategoryButton(
                 Text(
                     text = category.name,
                     fontSize = 16.sp,
-                    color = if (buttonState) Color.White else Color.Black
+                    color = if (buttonState) White else Black
                 )
             }
         }
@@ -281,14 +282,10 @@ fun BottomSheetContent(
                     )
                 }
 
-                Button(
+                WideButton(
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(text = "Готово")
-                }
+                    text = "Готово"
+                )
             }
         }
     )

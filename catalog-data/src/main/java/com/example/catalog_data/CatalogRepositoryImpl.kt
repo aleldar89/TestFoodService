@@ -68,17 +68,13 @@ class CatalogRepositoryImpl @Inject constructor(
 
     override suspend fun getProductById(id: Int): Product = dao.getProductById(id).entityToDto()
 
-    //FIXME
     override fun filterProductsByTags(tagIds: List<Int>): Flow<List<Product>> =
-        dao.getProducts().map { list ->
-            list.filter { entity ->
-                tagIds.all { tagId ->
-                    entity.tagIds.contains(tagId)
+        dao.filterProductsByTags(tagIds)
+            .map { list ->
+                list.map { entity ->
+                    entity.entityToDto()
                 }
-            }.map { product ->
-                product.entityToDto()
             }
-        }
 
     override fun filterProductsByCategories(categoryIds: List<Int>): Flow<List<Product>> =
         dao.filterProductsByCategories(categoryIds)
@@ -88,7 +84,6 @@ class CatalogRepositoryImpl @Inject constructor(
                 }
             }
 
-    //FIXME
     override fun filterProductsByTagAndCategory(
         tagIds: List<Int>,
         categoryIds: List<Int>

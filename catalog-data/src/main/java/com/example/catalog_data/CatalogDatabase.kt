@@ -5,7 +5,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.models.Converters
 import com.example.models.category.CategoryEntity
-import com.example.models.crossref.ProductTagCrossRef
 import com.example.models.product.ProductEntity
 import com.example.models.tag.TagEntity
 
@@ -13,8 +12,7 @@ import com.example.models.tag.TagEntity
     entities = [
         CategoryEntity::class,
         TagEntity::class,
-        ProductEntity::class,
-        ProductTagCrossRef::class
+        ProductEntity::class
     ],
     version = 1,
     exportSchema = false
