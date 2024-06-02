@@ -8,13 +8,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
@@ -36,9 +40,7 @@ fun AmountButtons(
     color: Color = LightGrey
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = dimensionResource(R.dimen.padding_8)),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
@@ -51,10 +53,11 @@ fun AmountButtons(
             shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
             colors = ButtonDefaults.buttonColors(color)
         ) {
-            Text(
-                text = "-",
-                fontSize = 24.sp,
-                color = Orange
+            Icon(
+                painter = painterResource(R.drawable.ic_minus),
+                contentDescription = "",
+                tint = Orange,
+                modifier = modifier.scale(3f)
             )
         }
 
@@ -74,10 +77,11 @@ fun AmountButtons(
             shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
             colors = ButtonDefaults.buttonColors(color)
         ) {
-            Text(
-                text = "+",
-                fontSize = 30.sp,
-                color = Orange
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "",
+                tint = Orange,
+                modifier = modifier.scale(3f)
             )
         }
     }
@@ -104,7 +108,6 @@ fun LoadIcon(
 fun LoadImage(
     modifier: Modifier = Modifier,
     contentDescription: String = "",
-    alignment: Alignment = Alignment.Center,
     contentScale: ContentScale = ContentScale.FillWidth,
     placeholder: Painter = painterResource(R.drawable.placeholder),
 ) {
@@ -112,8 +115,7 @@ fun LoadImage(
         painter = placeholder,
         contentDescription = contentDescription,
         contentScale = contentScale,
-        modifier = modifier,
-        alignment = alignment
+        modifier = modifier
     )
 }
 
@@ -125,14 +127,12 @@ fun WideButton(
     shape: Shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
 ) {
     Button(
-        modifier = modifier
-            .padding(top = dimensionResource(R.dimen.padding_20))
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         onClick = onClick,
         shape = shape,
     ) {
         Text(
-            text = "$text ₽",
+            text = text,
             color = White,
             style = MaterialTheme.typography.labelSmall,
         )

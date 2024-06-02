@@ -32,16 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.fontResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.models.category.Category
-import com.example.models.product.Product
-import com.example.models.tag.Tag
+import com.example.domain.models.CategoryModel
+import com.example.domain.models.ProductModel
+import com.example.domain.models.TagModel
 import com.example.testfoodservice.AmountButtons
 import com.example.testfoodservice.LoadIcon
 import com.example.testfoodservice.LoadImage
@@ -80,7 +79,7 @@ fun CatalogScreen(
         bottomBar = {
             if (sheetState.isVisible) {
                 BottomSheetContent(
-                    tags = tags,
+                    tagModels = tags,
                     selectedTagIds = selectedTagIds,
                     onTagSelected = viewModel::updateSelectedTags,
                     onDismiss = {
@@ -97,7 +96,7 @@ fun CatalogScreen(
                 onClicked = viewModel::updateSelectedCategories
             )
             CatalogGrid(
-                products = products,
+                productModels = products,
                 onNavigateToProduct = onNavigateToProduct,
                 addProductToCart = viewModel::addProductToCart,
                 removeProductFromCart = viewModel::removeProductFromCart
@@ -108,7 +107,7 @@ fun CatalogScreen(
 
 @Composable
 fun CatalogGrid(
-    products: List<Product>,
+    productModels: List<ProductModel>,
     onNavigateToProduct: (id: Int) -> Unit,
     addProductToCart: (id: Int) -> Unit,
     removeProductFromCart: (id: Int) -> Unit
@@ -116,14 +115,14 @@ fun CatalogGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(8.dp)
+        contentPadding = PaddingValues(dimensionResource(R.dimen.padding_8))
     ) {
-        items(products.size) { index ->
+        items(productModels.size) { index ->
             CatalogItem(
-                product = products[index],
+                productModel = productModels[index],
                 onClick = onNavigateToProduct,
-                onAddProduct = { addProductToCart(products[index].id) },
-                onRemoveProduct = { removeProductFromCart(products[index].id) }
+                onAddProduct = { addProductToCart(productModels[index].id) },
+                onRemoveProduct = { removeProductFromCart(productModels[index].id) }
             )
         }
     }
@@ -131,36 +130,36 @@ fun CatalogGrid(
 
 @Composable
 fun CatalogItem(
-    product: Product,
+    productModel: ProductModel,
     onClick: (id: Int) -> Unit,
     onAddProduct: () -> Unit,
     onRemoveProduct: () -> Unit
 ) {
     Column(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(dimensionResource(R.dimen.padding_8))
             .fillMaxWidth(),
     ) {
 
         Box(modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(product.id) }
+            .clickable { onClick(productModel.id) }
         ) {
             LoadImage(modifier = Modifier.fillMaxSize())
-            if (product.priceOld != null)
+            if (productModel.priceOld != null)
                 LoadIcon()
         }
 
         Column(
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier.padding(bottom = dimensionResource(R.dimen.padding_8))
         ) {
-            Text(text = product.name, maxLines = 1)
-            Text(text = "${product.measure} ${product.measureUnit}")
+            Text(text = productModel.name, maxLines = 1)
+            Text(text = "${productModel.measure} ${productModel.measureUnit}")
         }
 
-        if (product.amount > 0) {
+        if (productModel.amount > 0) {
             AmountButtons(
-                amount = product.amount,
+                amount = productModel.amount,
                 onIncrement = onAddProduct,
                 onDecrement = onRemoveProduct
             )
@@ -168,7 +167,6 @@ fun CatalogItem(
             Button(
                 onClick = onAddProduct,
                 modifier = Modifier
-                    .padding(top = 8.dp)
                     .aspectRatio(3f / 1f)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
@@ -177,16 +175,16 @@ fun CatalogItem(
                     contentColor = Black
                 ),
                 elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 10.dp
+                    defaultElevation = dimensionResource(R.dimen.elevation_10)
                 )
             ) {
                 Text(
-                    text = "${product.priceCurrent.decreaseBy100()} ₽",
+                    text = "${productModel.priceCurrent.decreaseBy100()} ₽",
                     fontSize = 16.sp,
                 )
-                if (product.priceOld != null) {
+                if (productModel.priceOld != null) {
                     Text(
-                        text = "${product.priceOld!!.decreaseBy100()} ₽",
+                        text = "${productModel.priceOld!!.decreaseBy100()} ₽",
                         fontSize = 16.sp,
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.padding(start = 8.dp)
@@ -199,17 +197,17 @@ fun CatalogItem(
 
 @Composable
 fun CategoryRow(
-    categories: List<Category>,
+    categories: List<CategoryModel>,
     selectedCategoryIds: List<Int>,
     onClicked: (categoryId: Int) -> Unit
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(8.dp)
+        contentPadding = PaddingValues(dimensionResource(R.dimen.padding_8))
     ) {
         items(categories.size) { index ->
             CategoryButton(
-                category = categories[index],
+                categoryModel = categories[index],
                 buttonState = selectedCategoryIds.contains(categories[index].id),
                 onClicked = onClicked
             )
@@ -219,29 +217,32 @@ fun CategoryRow(
 
 @Composable
 fun CategoryButton(
-    category: Category,
+    categoryModel: CategoryModel,
     buttonState: Boolean,
     onClicked: (categoryId: Int) -> Unit
 ) {
 
     Button(
         onClick = {
-            onClicked(category.id)
+            onClicked(categoryModel.id)
         },
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier.padding(dimensionResource(R.dimen.padding_8)),
         shape = RoundedCornerShape(dimensionResource(R.dimen.corner_size)),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (buttonState) Orange else White,
             disabledContentColor = Gray
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(
+            horizontal = dimensionResource(R.dimen.padding_16),
+            vertical = dimensionResource(R.dimen.padding_8)
+        ),
         content = {
             Row(
                 modifier = Modifier.background(Color.Transparent),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = category.name,
+                    text = categoryModel.name,
                     fontSize = 16.sp,
                     color = if (buttonState) White else Black
                 )
@@ -253,7 +254,7 @@ fun CategoryButton(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetContent(
-    tags: List<Tag>,
+    tagModels: List<TagModel>,
     selectedTagIds: List<Int>,
     onTagSelected: (tagId: Int) -> Unit,
     onDismiss: () -> Unit
@@ -265,16 +266,19 @@ fun BottomSheetContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.padding_16),
+                        vertical = dimensionResource(R.dimen.padding_8)
+                    )
             ) {
                 Text(
                     text = "Подобрать блюда",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.padding_8))
                 )
-                tags.forEach { tag ->
+                tagModels.forEach { tag ->
                     TagRow(
-                        tag = tag,
+                        tagModel = tag,
                         checked = selectedTagIds.contains(tag.id),
                         onCheckedChange = { tagId ->
                             onTagSelected(tagId)
@@ -284,7 +288,7 @@ fun BottomSheetContent(
 
                 WideButton(
                     onClick = onDismiss,
-                    text = "Готово"
+                    text = stringResource(R.string.ready)
                 )
             }
         }
@@ -293,19 +297,22 @@ fun BottomSheetContent(
 
 @Composable
 fun TagRow(
-    tag: Tag,
+    tagModel: TagModel,
     checked: Boolean,
     onCheckedChange: (tagId: Int) -> Unit
 ) {
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(
+                horizontal = dimensionResource(R.dimen.padding_16),
+                vertical = dimensionResource(R.dimen.padding_8)
+            )
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = tag.name,
+            text = tagModel.name,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
@@ -313,7 +320,7 @@ fun TagRow(
         Checkbox(
             checked = checked,
             onCheckedChange = {
-                onCheckedChange(tag.id)
+                onCheckedChange(tagModel.id)
             },
             colors = CheckboxDefaults.colors(
                 checkedColor = MaterialTheme.colorScheme.secondary,

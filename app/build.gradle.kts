@@ -53,9 +53,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":models"))
-    implementation(project(":base"))
-    implementation(project(":catalog-data"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.appcompat)
     implementation(libs.lifecycle.runtime.ktx)
@@ -68,6 +67,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.compiler)
     implementation(platform(libs.compose.bom))
+    implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)

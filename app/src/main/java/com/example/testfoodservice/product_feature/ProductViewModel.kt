@@ -1,11 +1,12 @@
 package com.example.testfoodservice.product_feature
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.base.BaseViewModel
-import com.example.catalog_data.use_cases.GetProductByIdUseCase
-import com.example.catalog_data.use_cases.IncreaseProductAmountUseCase
-import com.example.models.product.Product
+import com.example.testfoodservice.BaseViewModel
+import com.example.domain.use_cases.GetProductByIdUseCase
+import com.example.domain.use_cases.IncreaseProductAmountUseCase
+import com.example.domain.models.ProductModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-val emptyProduct = Product(
+val emptyProductModel = ProductModel(
     id = 0,
     categoryId = 0,
     name = "",
@@ -36,7 +37,7 @@ class ProductViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getProductByIdUseCase: GetProductByIdUseCase,
     private val increaseProductAmountUseCase: IncreaseProductAmountUseCase
-) : BaseViewModel() {
+) : ViewModel(), BaseViewModel {
 
     init {
         getProductById()
@@ -44,15 +45,15 @@ class ProductViewModel @Inject constructor(
 
     private val productId: String? = savedStateHandle["productId"]
 
-    private val _clickedProduct = MutableStateFlow(emptyProduct)
-    val clickedProduct: StateFlow<Product> = _clickedProduct
+    private val _clickedProduct = MutableStateFlow(emptyProductModel)
+    val clickedProductModel: StateFlow<ProductModel> = _clickedProduct
 
     private fun getProductById() = viewModelScope.launch(Dispatchers.IO) {
         if (productId != null)
-            _clickedProduct.value = getProductByIdUseCase.getProductById(productId.toInt())
+            _clickedProduct.value = getProductByIdUseCase.product(productId.toInt())
     }
 
     fun addProductToCart(id: Int) = viewModelScope.launch(Dispatchers.IO) {
-        increaseProductAmountUseCase.increaseProductAmount(id)
+        increaseProductAmountUseCase.increase(id)
     }
 }

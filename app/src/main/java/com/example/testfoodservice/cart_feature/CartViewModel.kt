@@ -1,11 +1,13 @@
 package com.example.testfoodservice.cart_feature
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.base.BaseViewModel
-import com.example.catalog_data.use_cases.DecreaseProductAmountUseCase
-import com.example.catalog_data.use_cases.GetProductsFromCartUseCase
-import com.example.catalog_data.use_cases.IncreaseProductAmountUseCase
-import com.example.models.product.Product
+import com.example.testfoodservice.BaseViewModel
+import com.example.domain.use_cases.DecreaseProductAmountUseCase
+import com.example.domain.use_cases.GetCartPriceUseCase
+import com.example.domain.use_cases.GetProductsFromCartUseCase
+import com.example.domain.use_cases.IncreaseProductAmountUseCase
+import com.example.domain.models.ProductModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,18 +19,21 @@ import javax.inject.Inject
 @HiltViewModel
 class CartViewModel @Inject constructor(
     productsFromCartUseCase: GetProductsFromCartUseCase,
+    cartPriceUseCase: GetCartPriceUseCase,
     private val increaseProductAmountUseCase: IncreaseProductAmountUseCase,
     private val decreaseProductAmountUseCase: DecreaseProductAmountUseCase
-) : BaseViewModel() {
+) : ViewModel(), BaseViewModel {
 
-    val productsFromCart: StateFlow<List<Product>> =
-        getLocalData(productsFromCartUseCase.productsFromCart)
+    val productsFromCart: StateFlow<List<ProductModel>> =
+        getLocalData(productsFromCartUseCase.cart, viewModelScope)
+
+    val cartPrice: StateFlow<Int> = getLocalData(cartPriceUseCase.price, viewModelScope)
 
     fun addProductToCart(id: Int) = viewModelScope.launch(Dispatchers.IO) {
-        increaseProductAmountUseCase.increaseProductAmount(id)
+        increaseProductAmountUseCase.increase(id)
     }
 
     fun removeProductFromCart(id: Int) = viewModelScope.launch(Dispatchers.IO) {
-        decreaseProductAmountUseCase.decreaseProductAmount(id)
+        decreaseProductAmountUseCase.decrease(id)
     }
 }

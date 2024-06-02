@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">TestFoodService</string>
+    <string name="price">%s ₽</string>
     <string name="gramms">%s г</string>
     <string name="energy_value">Энерг. ценность</string>
     <string name="calories">%s ккал</string>
@@ -7,7 +8,9 @@
     <string name="proteins">Белки</string>
     <string name="fats">Жиры</string>
     <string name="carbohydrates">Углеводы</string>
-    <string name="to_cart">В корзину за %s</string>
+    <string name="to_cart">В корзину за %s ₽</string>
+    <string name="order">Заказать за %s ₽</string>
     <string name="title_cart">Корзина</string>
-    <string name="empty_cart">Корзина пуста, выберите блюда из каталога</string>
+    <string name="empty_cart">Корзина пуста,\nвыберите блюда из каталога</string>
+    <string name="ready">Готово</string>
 </resources>

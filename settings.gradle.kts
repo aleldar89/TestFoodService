@@ -15,8 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "TestFoodService"
 include(":app")
-include(":network")
-include(":models")
-include(":base")
-include(":catalog-data")
+include(":domain")
+include(":data")
 

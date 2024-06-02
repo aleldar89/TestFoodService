@@ -1,20 +1,20 @@
 package com.example.testfoodservice.catalog_feature
 
-import android.util.Log
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.base.BaseViewModel
-import com.example.catalog_data.use_cases.DecreaseProductAmountUseCase
-import com.example.catalog_data.use_cases.FilterProductsByCategoriesUseCase
-import com.example.catalog_data.use_cases.FilterProductsByTagAndCategoryUseCase
-import com.example.catalog_data.use_cases.FilterProductsByTagsUseCase
-import com.example.catalog_data.use_cases.GetLocalCategoriesUseCase
-import com.example.catalog_data.use_cases.GetLocalProductsUseCase
-import com.example.catalog_data.use_cases.GetLocalTagsUseCase
-import com.example.catalog_data.use_cases.GetRemoteDataUseCase
-import com.example.catalog_data.use_cases.IncreaseProductAmountUseCase
-import com.example.models.category.Category
-import com.example.models.product.Product
-import com.example.models.tag.Tag
+import com.example.testfoodservice.BaseViewModel
+import com.example.domain.use_cases.DecreaseProductAmountUseCase
+import com.example.domain.use_cases.FilterProductsByCategoriesUseCase
+import com.example.domain.use_cases.FilterProductsByTagAndCategoryUseCase
+import com.example.domain.use_cases.FilterProductsByTagsUseCase
+import com.example.domain.use_cases.GetLocalCategoriesUseCase
+import com.example.domain.use_cases.GetLocalProductsUseCase
+import com.example.domain.use_cases.GetLocalTagsUseCase
+import com.example.domain.use_cases.GetRemoteDataUseCase
+import com.example.domain.use_cases.IncreaseProductAmountUseCase
+import com.example.domain.models.CategoryModel
+import com.example.domain.models.ProductModel
+import com.example.domain.models.TagModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,10 +40,11 @@ class CatalogViewModel @Inject constructor(
     private val filterProductsByTagAndCategoryUseCase: FilterProductsByTagAndCategoryUseCase,
     private val increaseProductAmountUseCase: IncreaseProductAmountUseCase,
     private val decreaseProductAmountUseCase: DecreaseProductAmountUseCase
-) : BaseViewModel() {
+) : ViewModel(), BaseViewModel {
 
-    val categories: StateFlow<List<Category>> = getLocalData(localCategoriesUseCase.localCategories)
-    val tags: StateFlow<List<Tag>> = getLocalData(localTagsUseCase.localTags)
+    val categories: StateFlow<List<CategoryModel>> =
+        getLocalData(localCategoriesUseCase.categories, viewModelScope)
+    val tags: StateFlow<List<TagModel>> = getLocalData(localTagsUseCase.tags, viewModelScope)
 
     private val _selectedTagIds = MutableStateFlow(listOf<Int>())
     val selectedTagIds: StateFlow<List<Int>> = _selectedTagIds
@@ -60,27 +61,21 @@ class CatalogViewModel @Inject constructor(
             Pair(emptyList(), emptyList())
         )
 
-    val products: StateFlow<List<Product>> = getLocalData(
+    val products: StateFlow<List<ProductModel>> = getLocalData(
         combinedSelectedTagsAndCategories.flatMapLatest { (tagIds, categoryIds) ->
             when {
-                tagIds.isEmpty() && categoryIds.isEmpty() -> localProductsUseCase.localProducts
-
-                tagIds.isEmpty() -> {
-                    filterProductsByCategoriesUseCase.filterProductsByCategories(categoryIds)
-                }
-
-                categoryIds.isEmpty() -> {
-                    filterProductsByTagsUseCase.filterProductsByTags(tagIds)
-                }
-
+                tagIds.isEmpty() && categoryIds.isEmpty() -> localProductsUseCase.products
+                tagIds.isEmpty() -> filterProductsByCategoriesUseCase.filter(categoryIds)
+                categoryIds.isEmpty() -> filterProductsByTagsUseCase.filter(tagIds)
                 else -> {
-                    filterProductsByTagAndCategoryUseCase.filterProductsByTagAndCategory(
+                    filterProductsByTagAndCategoryUseCase.filter(
                         tagIds,
                         categoryIds
                     )
                 }
             }
-        }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(timeout), 1)
+        }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(timeout), 1),
+        viewModelScope
     )
 
     init {
@@ -90,18 +85,17 @@ class CatalogViewModel @Inject constructor(
     private fun getData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                getRemoteDataUseCase.getRemoteData()
+                getRemoteDataUseCase.data()
             } catch (e: Exception) {
                 //TODO
             }
         }
     }
 
-    fun updateSelectedTags(tagId: Int) =
-        if (_selectedTagIds.value.contains(tagId))
-            _selectedTagIds.value -= tagId
-        else
-            _selectedTagIds.value += tagId
+    fun updateSelectedTags(tagId: Int) = if (_selectedTagIds.value.contains(tagId))
+        _selectedTagIds.value -= tagId
+    else
+        _selectedTagIds.value += tagId
 
     fun updateSelectedCategories(categoryId: Int) =
         if (_selectedCategoryIds.value.contains(categoryId))
@@ -110,10 +104,10 @@ class CatalogViewModel @Inject constructor(
             _selectedCategoryIds.value += categoryId
 
     fun addProductToCart(id: Int) = viewModelScope.launch(Dispatchers.IO) {
-        increaseProductAmountUseCase.increaseProductAmount(id)
+        increaseProductAmountUseCase.increase(id)
     }
 
     fun removeProductFromCart(id: Int) = viewModelScope.launch(Dispatchers.IO) {
-        decreaseProductAmountUseCase.decreaseProductAmount(id)
+        decreaseProductAmountUseCase.decrease(id)
     }
 }
